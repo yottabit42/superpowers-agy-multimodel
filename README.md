@@ -8,15 +8,15 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/roundpilot/superpowers-antigravity#-installation"><img src="https://img.shields.io/badge/Install-Guide-blue?style=for-the-badge" alt="Install"></a>
-  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/Version-6.3.0-green?style=for-the-badge" alt="Version 6.3.0"></a>
+  <a href="https://github.com/yottabit42/superpowers-agy-multimodel#-installation"><img src="https://img.shields.io/badge/Install-Guide-blue?style=for-the-badge" alt="Install"></a>
+  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/Version-7.0.0-green?style=for-the-badge" alt="Version 7.0.0"></a>
   <a href="https://github.com/obra/superpowers"><img src="https://img.shields.io/badge/Fork%20of-obra%2Fsuperpowers-purple?style=for-the-badge" alt="Fork of obra/superpowers"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="MIT License"></a>
 </p>
 
 ---
 
-> **This is a fork of [obra/superpowers](https://github.com/obra/superpowers) rebuilt natively for [Google Antigravity 2.0](https://antigravity.google).** If you need multi-platform support (Claude Code, Codex, Cursor, etc.), use the upstream repo instead.
+> **This is a fork of [roundpilot/superpowers-antigravity](https://github.com/roundpilot/superpowers-antigravity) (and [obra/superpowers](https://github.com/obra/superpowers)) with v7.0.0 adaptive multi-model orchestration for [Google Antigravity 2.0](https://antigravity.google).** If you need multi-platform support (Claude Code, Codex, Cursor, etc.), use the upstream repo instead.
 
 ---
 
@@ -79,7 +79,8 @@ Beyond the platform port, this fork adds capabilities that don't exist upstream:
 - 📐 **Rich plan formatting** — Mermaid architecture diagrams, clickable `file:///` links, diff blocks
 - 🔄 **Async subagent coordination** — `manage_task` for builds, `send_message` mid-flight, `schedule` for timeouts
 - 🌐 **Browser-testing skill** — evidence-before-assertions discipline for UI work
-- 💰 **Token-saving subagents** — reviewers are read-only bundled agents (`TypeName: "research"` for ad-hoc review)
+- 💰 **Adaptive multi-model orchestration (`quota` vs `same`)** — Always-On Step-0 router (`mode=auto`, `profile=quota`) routes routine implementation, task-level reviews, parallel shards, and verification to `flash` (`Model: "flash"` in CLI or hidden `*-flash.md` subagents in IDE) while preserving your session model (`inherit`) for architecture, Tier 3 Best-of-N planning/review, and escalations
+- 🧩 **20-agent specialist catalog + 3-phase fallback** — 11 primary specialists (`architect`, `codesigner`, `designdoc-drafter`, `planner`, `implementer`, `spec-reviewer`, `code-reviewer`, `re-reviewer`, `verifier`, `skills-implementer`, `skills-devils-advocate`), 8 hidden `-flash` IDE variants (`*-flash.md` + `research-flash`), optional `superpowers-multimodel` main agent, and `references/fallback-adapter.md` (`define_subagent` → `self` → inline)
 - ✅ **Automatic feedback loops** — `RequestFeedback: true` (in `ArtifactMetadata`) on design docs and plans
 - 🔀 **Workspace mode guidance** — decision tables for `branch` / `inherit` / `share` per role
 - 🛡️ **Edit-time purity gate** — a `PreToolUse` hook blocks banned legacy vocabulary from entering this plugin's `skills/` before a write ever lands (opt-in for contributors: rename `hooks.example.json` → `hooks.json`; requires `bash` available to the hook runner)
@@ -121,7 +122,7 @@ Beyond the platform port, this fork adds capabilities that don't exist upstream:
 One command, straight from GitHub:
 
 ```bash
-agy plugin install https://github.com/roundpilot/superpowers-antigravity
+agy plugin install https://github.com/yottabit42/superpowers-agy-multimodel
 ```
 
 Manage with `agy plugin list` / `agy plugin enable superpowers` / `agy plugin disable superpowers`.
@@ -136,12 +137,12 @@ The IDE loads plugins from its config directories — clone this repo into one:
 
 **Global plugin** (available in all projects):
 ```bash
-git clone https://github.com/roundpilot/superpowers-antigravity ~/.gemini/config/plugins/superpowers
+git clone https://github.com/yottabit42/superpowers-agy-multimodel ~/.gemini/config/plugins/superpowers
 ```
 
 **Workspace plugin** (project-level only):
 ```bash
-git clone https://github.com/roundpilot/superpowers-antigravity .agents/plugins/superpowers
+git clone https://github.com/yottabit42/superpowers-agy-multimodel .agents/plugins/superpowers
 ```
 
 **Update later:**
@@ -153,12 +154,12 @@ cd ~/.gemini/config/plugins/superpowers && git pull
 
 **Global plugin** (available in all projects):
 ```powershell
-git clone https://github.com/roundpilot/superpowers-antigravity "$env:USERPROFILE\.gemini\config\plugins\superpowers"
+git clone https://github.com/yottabit42/superpowers-agy-multimodel "$env:USERPROFILE\.gemini\config\plugins\superpowers"
 ```
 
 **Workspace plugin** (project-level only):
 ```powershell
-git clone https://github.com/roundpilot/superpowers-antigravity .agents\plugins\superpowers
+git clone https://github.com/yottabit42/superpowers-agy-multimodel .agents\plugins\superpowers
 ```
 
 **Update later:**
@@ -174,10 +175,10 @@ If you run the **Windows Antigravity IDE** but your workspace is in **WSL**:
 
 ```bash
 # Global plugin (installed on Windows side):
-git clone https://github.com/roundpilot/superpowers-antigravity /mnt/c/Users/$USER/.gemini/config/plugins/superpowers
+git clone https://github.com/yottabit42/superpowers-agy-multimodel /mnt/c/Users/$USER/.gemini/config/plugins/superpowers
 
 # Workspace plugin (inside your WSL workspace):
-git clone https://github.com/roundpilot/superpowers-antigravity /path/to/your/wsl/project/.agents/plugins/superpowers
+git clone https://github.com/yottabit42/superpowers-agy-multimodel /path/to/your/wsl/project/.agents/plugins/superpowers
 ```
 
 #### Manual IDE installation (no git required)
@@ -187,19 +188,19 @@ git clone https://github.com/roundpilot/superpowers-antigravity /path/to/your/ws
 
 **macOS / Linux:**
 ```bash
-curl -L https://github.com/roundpilot/superpowers-antigravity/archive/refs/heads/main.zip -o superpowers.zip
+curl -L https://github.com/yottabit42/superpowers-agy-multimodel/archive/refs/heads/main.zip -o superpowers.zip
 unzip superpowers.zip
 mkdir -p ~/.gemini/config/plugins
-mv superpowers-antigravity-main ~/.gemini/config/plugins/superpowers
+mv superpowers-agy-multimodel-main ~/.gemini/config/plugins/superpowers
 rm superpowers.zip
 ```
 
 **Windows (PowerShell):**
 ```powershell
-Invoke-WebRequest -Uri "https://github.com/roundpilot/superpowers-antigravity/archive/refs/heads/main.zip" -OutFile superpowers.zip
+Invoke-WebRequest -Uri "https://github.com/yottabit42/superpowers-agy-multimodel/archive/refs/heads/main.zip" -OutFile superpowers.zip
 Expand-Archive superpowers.zip -DestinationPath .
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.gemini\config\plugins"
-Move-Item superpowers-antigravity-main "$env:USERPROFILE\.gemini\config\plugins\superpowers"
+Move-Item superpowers-agy-multimodel-main "$env:USERPROFILE\.gemini\config\plugins\superpowers"
 Remove-Item superpowers.zip
 ```
 
@@ -207,13 +208,13 @@ To update later, delete the `superpowers` folder and repeat the steps above.
 
 </details>
 
-#### Migrating an IDE install from `roundpilot/superpowers`
+#### Migrating an IDE install from `roundpilot/superpowers-antigravity`
 
-If you previously installed from `roundpilot/superpowers`, update your remote:
+If you previously installed from `roundpilot/superpowers-antigravity`, update your remote:
 
 ```bash
 cd ~/.gemini/config/plugins/superpowers
-git remote set-url origin https://github.com/roundpilot/superpowers-antigravity.git
+git remote set-url origin https://github.com/yottabit42/superpowers-agy-multimodel.git
 git pull
 ```
 
@@ -231,13 +232,17 @@ git pull
 
 Once installed, the methodology loads itself — no per-session setup:
 
-- **Automatic (default).** The plugin's context file loads the `using-superpowers` bootstrap into every session, and the bundled rule (`rules/using-superpowers.md`) does the same through Antigravity's rule system — check the Rules panel once after installing and set it to **Always On** if it isn't already. From there, individual skills trigger themselves based on what you ask for: describe a feature and brainstorming starts, report a bug and systematic-debugging starts.
+- **Automatic (default).** The plugin's context file loads the `using-superpowers` bootstrap into every session, and the bundled rule (`rules/using-superpowers.md`, with `trigger: always_on`) does the same through Antigravity's rule system — check the Rules panel once after installing and set it to **Always On** if it isn't already. By default, the Step-0 Adaptive Router runs with `mode=auto` and `profile=quota` (`max_concurrent_inherit=2`).
+- **Runtime mode & profile switching.** Switch orchestration mode (`auto` | `solo` | `subagents`) or model profile (`quota` | `same`) anytime in chat:
+  - `/start-superpowers [auto|solo|subagents] [quota|same]` — e.g., `/start-superpowers auto same` to run every subagent on your parent model, or `/start-superpowers subagents quota` for 100% delegated quota-saving routing.
+  - `/start-superpowers-multimodel` — shorthand alias for `/start-superpowers subagents quota` (bypasses Route 1 Direct IC and delegates even surgical edits to `flash` `implementer`).
+- **Persistent workspace or global config.** Override defaults per repository in `<repo-root>/.superpowers/config.json` or globally in `~/.gemini/superpowers_config.json` (`default_mode`, `default_profile`, `max_concurrent_inherit`, and per-role `role_models` overrides).
 - **Per session.** Type `/using-superpowers` (IDE) or `/superpowers:using-superpowers` (CLI) to load the methodology for just the current conversation.
 - **Scoped, if you don't want it everywhere.** Install as a **workspace plugin** (`.agents/plugins/superpowers`) so only chosen projects get it — or set the bundled rule to **Manual** in the Rules panel and summon it on demand with the slash command when a session calls for it.
 
-The always-loaded footprint is a single compressed bootstrap (~55 lines); individual skills are read only when they actually trigger.
+The always-loaded footprint is a single compressed bootstrap; individual skills are read only when they actually trigger.
 
-## 📚 Skills Reference
+## 📚 Skills Reference (17 Skills)
 
 ### Testing & Verification
 | Skill | Purpose |
@@ -250,25 +255,28 @@ The always-loaded footprint is a single compressed bootstrap (~55 lines); indivi
 |-------|---------|
 | **systematic-debugging** | 4-phase root cause process with `search_web` for unfamiliar errors |
 | **verification-before-completion** | Ensure it's actually fixed; cron schedules for long test suites |
+| **diagnosing-superpowers** | Evidence-backed session transcript triage and scrubbed bug-report bundle builder using parallel `flash` analysts (`verifier-flash` / `implementer-flash`) |
 
 ### Collaboration
 | Skill | Purpose |
 |-------|---------|
-| **brainstorming** | Three-path router (spike / bounded / architectural) so ceremony scales to the task; Socratic refinement with `generate_image` mockups and `search_web` for prior art |
-| **writing-plans** | Detailed plans with Mermaid diagrams, rich formatting, `RequestFeedback`, and a `Spec:` pointer so the spec travels with the plan |
+| **brainstorming** | Three-path router (spike / bounded / architectural) with `generate_image` mockups and `codesigner` (`inherit`) → `designdoc-drafter` (`flash`) spec pipeline |
+| **writing-plans** | Tiered plan delegation (`1x planner` on `flash` for Tier 2; `architect` + parallel `2x planner` Best-of-N on `inherit` for Tier 3) with Mermaid diagrams and `RequestFeedback` |
 | **executing-plans** | Inline plan execution with walkthrough generation |
-| **dispatching-parallel-agents** | Concurrent workflows with `Workspace: "share"` and monitoring |
-| **requesting-code-review** | Bundled `code-reviewer` dispatches with severity classification (`research` for lightweight ad-hoc reviews) |
+| **dispatching-parallel-agents** | Concurrent `flash` `implementer` (`Workspace: "share"`) and `research` shards with a final `verifier` gate |
+| **requesting-code-review** | Tiered `code-reviewer` dispatches (`flash` for task reviews, `inherit` for whole-branch and Tier 3 lead reviews) |
 | **receiving-code-review** | Responding to feedback with technical rigor |
 | **using-git-worktrees** | Workspace isolation with mode decision table |
 | **finishing-a-development-branch** | Merge/PR decision workflow |
-| **subagent-driven-development** | Fast iteration with two-stage task review and async coordination; resume-based fix loop with five-round cap; records rulings instead of stalling, and batches small same-shape tasks into one dispatch |
+| **subagent-driven-development** | Hybrid `flash`/`inherit` task execution with two-stage review, Tier 3 Best-of-N dual-tier review, automatic `flash` → `inherit` escalation on `BLOCKED` or Fix Rounds 4–5, and non-author `verifier` gate |
 
 ### Meta
 | Skill | Purpose |
 |-------|---------|
-| **writing-skills** | Create new skills following best practices |
-| **using-superpowers** | Introduction to the skills system |
+| **writing-skills** | Create and audit skills via the `skills-implementer` → `skills-devils-advocate` TDD pipeline |
+| **using-superpowers** | Always-On Step-0 Adaptive Router, Role Routing Matrix, and Hybrid Model-Resolution bootstrap |
+| **start-superpowers** | Switch orchestration mode (`auto`, `solo`, `subagents`) or model profile (`quota`, `same`) at runtime or in `.superpowers/config.json` |
+| **start-superpowers-multimodel** | Activate strict 100% delegated multi-model orchestration (`mode=subagents`, `profile=quota`) |
 
 ## 🧭 Philosophy
 
