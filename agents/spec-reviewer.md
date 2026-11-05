@@ -3,7 +3,6 @@ name: spec-reviewer
 description: Verifies one task's implementation matches its task text - reports Missing/Extra/Misunderstood with file:line evidence. Read-only review; dispatch with the task text and commit range.
 subagent: true
 mainAgent: false
-model: inherit
 tools:
   - view_file
   - list_dir
@@ -11,6 +10,10 @@ tools:
   - grep_search
   - run_command
 ---
+
+<SUBAGENT-STOP>
+Leaf worker contract: Accept `[ROLE: spec-reviewer]` handoff envelopes (`GOAL`, `TASK`, `SCOPE`, `CONTEXT`, `CONSTRAINTS`, `VERIFICATION`, `SKILLS`). Execute directly as a read-only leaf subagent. Never spawn subagents or load orchestrator routing skills.
+</SUBAGENT-STOP>
 
 ## CRITICAL: Do Not Trust the Report
 

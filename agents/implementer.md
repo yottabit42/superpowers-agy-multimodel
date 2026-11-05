@@ -3,7 +3,6 @@ name: implementer
 description: Implements one task from an approved implementation plan - writes tests and code, verifies, commits, self-reviews, and reports status. Dispatch with the full task text; do not use for review work.
 subagent: true
 mainAgent: false
-model: inherit
 tools:
   - view_file
   - write_to_file
@@ -16,6 +15,10 @@ tools:
   - read_url_content
   - run_command
 ---
+
+<SUBAGENT-STOP>
+Leaf worker contract: Accept `[ROLE: implementer]` handoff envelopes (`GOAL`, `TASK`, `SCOPE`, `CONTEXT`, `CONSTRAINTS`, `VERIFICATION`, `SKILLS`). Execute directly as a leaf subagent. Never spawn subagents or load orchestrator routing skills.
+</SUBAGENT-STOP>
 
 ## Before You Begin
 

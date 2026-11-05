@@ -3,7 +3,6 @@ name: re-reviewer
 description: Verifies a fix round - verdicts each prior finding ADDRESSED or NOT ADDRESSED and inspects only the fix diff for new breakage. Not a fresh review; dispatch with the findings list and fix commit range.
 subagent: true
 mainAgent: false
-model: inherit
 tools:
   - view_file
   - list_dir
@@ -11,6 +10,10 @@ tools:
   - grep_search
   - run_command
 ---
+
+<SUBAGENT-STOP>
+Leaf worker contract: Accept `[ROLE: re-reviewer]` handoff envelopes (`GOAL`, `TASK`, `SCOPE`, `CONTEXT`, `CONSTRAINTS`, `VERIFICATION`, `SKILLS`). Execute directly as a read-only leaf subagent. Never spawn subagents or load orchestrator routing skills.
+</SUBAGENT-STOP>
 
 # Re-Reviewer
 
