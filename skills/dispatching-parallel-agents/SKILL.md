@@ -63,32 +63,35 @@ Each agent gets:
 - **Constraints:** Don't change other code
 - **Expected output:** Summary of what you found and fixed
 
-### 3. Dispatch in Parallel
+### 3. Dispatch in Parallel (Flash Shards under `profile=quota`)
+
+Under `profile=quota`, route parallel execution/fix shards to **`implementer` on `flash`** (`TypeName: "implementer"` with `Model: "flash"` when `Model` is declared on `invoke_subagent`, or `TypeName: "implementer-flash"` when `Model` is absent) instead of `self` so parallel shards do not multiply frontier reasoning quota. Route read-only investigation shards to **`research` on `flash`** (`Model: "flash"` or `TypeName: "research-flash"`). Wrap each specialist prompt in the `[ROLE: <role>]` + `<SUBAGENT-STOP>` handoff envelope. If any shard must be escalated to `inherit`, enforce `max_concurrent_inherit: 2` (batch `inherit` shards into waves of at most 2).
 
 ```
 invoke_subagent(Subagents: [
-  {TypeName: "self", Role: "Fix abort tests", Prompt: "Fix agent-tool-abort.test.ts failures..."},
-  {TypeName: "self", Role: "Fix batch tests", Prompt: "Fix batch-completion-behavior.test.ts failures..."},
-  {TypeName: "self", Role: "Fix race tests", Prompt: "Fix tool-approval-race-conditions.test.ts failures..."}
+  {TypeName: "implementer", Model: "flash", Workspace: "share", Role: "Fix abort tests", Prompt: "[ROLE: implementer]\n<SUBAGENT-STOP>\nFix agent-tool-abort.test.ts failures..."},
+  {TypeName: "implementer", Model: "flash", Workspace: "share", Role: "Fix batch tests", Prompt: "[ROLE: implementer]\n<SUBAGENT-STOP>\nFix batch-completion-behavior.test.ts failures..."},
+  {TypeName: "implementer", Model: "flash", Workspace: "share", Role: "Fix race tests", Prompt: "[ROLE: implementer]\n<SUBAGENT-STOP>\nFix tool-approval-race-conditions.test.ts failures..."}
 ])
-// All three run concurrently via the Subagents array
+// Match your active invoke_subagent schema (flat arguments per call or Subagents array).
+// On IDE builds without Model, dispatch TypeName: "implementer-flash" (or "research-flash" for read-only investigation).
 ```
 
-**Workspace isolation:** Choose the right mode for each agent:
+**Workspace isolation & tier per role:** Choose the right mode for each agent:
 
-| Agent role | Workspace mode | When |
-|-----------|---------------|------|
-| Editing different files | `Workspace: "share"` | Agents work in same repo without conflicts |
-| Editing same files | `Workspace: "branch"` | Each agent gets isolated copy |
-| Read-only investigation | `Workspace: "inherit"` | No write access needed |
+| Agent role | `TypeName` (`Model` exposed / absent) | `quota` Tier | Workspace mode | When |
+|-----------|---------------------------------------|-------------|---------------|------|
+| Editing different files | `implementer` (`Model: "flash"`) / `implementer-flash` | `flash` | `Workspace: "share"` | Agents work in same repo without conflicts |
+| Editing same files | `implementer` (`Model: "flash"`) / `implementer-flash` | `flash` | `Workspace: "branch"` | Each agent gets isolated copy |
+| Read-only investigation | `research` (`Model: "flash"`) / `research-flash` | `flash` | `Workspace: "inherit"` | No write access needed |
 
-### 4. Review and Integrate
+### 4. Review and Integrate (`verifier` Gate)
 
 Use `manage_subagents` with `Action: "list"` to check which agents are still running. When all agents return:
 - Read each summary
 - Verify fixes don't conflict
-- Run full test suite
-- Integrate all changes
+- Dispatch `1x verifier` on **`flash`** (`TypeName: "verifier"` with `Model: "flash"`, or `TypeName: "verifier-flash"` when `Model` is absent, `Workspace: "inherit"`, `[ROLE: verifier]`) to run the full test suite and check `git status --porcelain`
+- Integrate all changes once `verifier` returns `STATUS: VERIFIED`
 
 ## Agent Prompt Structure
 

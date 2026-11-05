@@ -29,9 +29,12 @@ BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
 HEAD_SHA=$(git rev-parse HEAD)
 ```
 
-**2. Dispatch code reviewer subagent:**
+**2. Dispatch code reviewer subagent (`quota` vs `same` routing):**
 
-Use `invoke_subagent` with `TypeName: "code-reviewer"` (bundled with this plugin) or `TypeName: "research"` for lightweight read-only review. Use `Workspace: "inherit"` — reviewers only need read access.
+Use `invoke_subagent` with `Workspace: "inherit"` (reviewers only need read access) and wrap the prompt in `[ROLE: code-reviewer]` + `<SUBAGENT-STOP>`. Under `profile=quota`, select the model tier by review scope:
+- **Single-task review (Tier 2 SDD task or Tier 3 secondary reviewer):** Route to **`flash`** (`TypeName: "code-reviewer"` with `Model: "flash"` when `Model` is declared on `invoke_subagent`, or `TypeName: "code-reviewer-flash"` when `Model` is absent).
+- **Major-feature, pre-merge whole-branch, or Tier 3 lead architectural review:** Route to **`inherit`** (`TypeName: "code-reviewer"` with `Model: "inherit"`, or primary `TypeName: "code-reviewer"` when `Model` is absent).
+- **Lightweight ad-hoc check:** Route to **`flash`** (`TypeName: "research"` with `Model: "flash"`, or `TypeName: "research-flash"` when `Model` is absent).
 
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built

@@ -44,6 +44,14 @@ A **skill** is a reference guide for proven techniques, patterns, or tools. Skil
 
 The entire skill creation process follows RED-GREEN-REFACTOR.
 
+## Delegated Skill Engineering Pipeline (`skills-implementer` → `skills-devils-advocate`)
+
+When creating or modifying a skill under the multi-model orchestrator (Route 7):
+
+1. **Author & Test (`skills-implementer` on `inherit`):** Dispatch `1x skills-implementer` (`TypeName: "skills-implementer"`, `Model: "inherit"` when `Model` is declared, `Workspace: "branch"`, `[ROLE: skills-implementer]`) to run RED/GREEN pressure micro-tests, author or update `SKILL.md` (with CSO frontmatter `< 1024` chars and `"Use when..."` triggers only), sync `rules/using-superpowers.md` if applicable, and run `tests/antigravity/test-skill-tool-purity.sh` + `tests/antigravity/test-rule-sync.sh`.
+2. **Adversarial Audit (`skills-devils-advocate` on `inherit`):** Once `skills-implementer` reports `STATUS: DONE`, dispatch `1x skills-devils-advocate` (`TypeName: "skills-devils-advocate"`, `Model: "inherit"` when `Model` is declared, `Workspace: "inherit"`, `[ROLE: skills-devils-advocate]`) to audit CSO triggers for workflow leaks, verify tool/argument names against `docs/superpowers/specs/2026-07-29-antigravity-2-0-platform-reference.md`, and hunt for rationalization loopholes.
+3. **Iterate Until Approved:** If `skills-devils-advocate` returns `Audit Verdict: CHANGES_REQUESTED`, resume `skills-implementer` via `send_message` with the findings until `skills-devils-advocate` returns `Audit Verdict: APPROVED`.
+
 ## When to Create a Skill
 
 **Create when:**
