@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 <!--
 using-superpowers bootstrap rule (native Antigravity plugin channel).
 
