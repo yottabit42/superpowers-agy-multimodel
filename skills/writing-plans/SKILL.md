@@ -18,6 +18,16 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 **Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
 
+## Multi-Model Plan Delegation (`planner` & `architect`)
+
+Instead of authoring large multi-task plans directly in the orchestrator's main context, delegate plan generation according to the task's complexity tier under `profile=quota` (following `skills/using-superpowers/SKILL.md` and `references/fallback-adapter.md` if a subagent is missing):
+
+- **Tier 2 Coupled (`3–8` coupled files, Route 4):** Dispatch `1x planner` on **`flash`** (`Model: "flash"` on `TypeName: "planner"`, or `TypeName: "planner-flash"` when `Model` is absent, `Workspace: "inherit"`, `[ROLE: planner]`) to write `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`.
+- **Tier 3 Architectural (Cross-package / interface migration / security-critical, Route 5):**
+  1. If no architectural boundary map exists yet, dispatch `1x architect` on **`inherit`** (`TypeName: "architect"`, `Model: "inherit"`, `Workspace: "inherit"`, `[ROLE: architect]`) to map blast radius, invariants, and disjoint task boundaries.
+  2. Dispatch **parallel `2x planner` on `inherit`** (`TypeName: "planner"`, `Model: "inherit"`, `Workspace: "inherit"`, capped at `max_concurrent_inherit: 2`). Instruct each candidate planner to write its draft to its own `<appDataDir>/brain/<own-conversation-id>/scratch/candidate-plan.md` and return an executive summary + task/file index table via `send_message` so parallel planners never collide on the same repository path.
+  3. Compare the two candidate plans in main context, cherry-pick the strongest decomposition, edge-case coverage, and test steps, and write the single canonical plan to `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md` with `RequestFeedback: true`. Pass only that canonical plan to `subagent-driven-development`.
+
 ## Scope Check
 
 If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.
@@ -75,6 +85,8 @@ Include a Mermaid diagram showing component relationships and data flow. This di
 
 **Spec:** [path to the spec/design doc this plan implements — the plan
 argues from the spec, so the spec travels with it; executors read both]
+
+**Tier:** [Tier 2 Coupled | Tier 3 Architectural]
 
 ## Global Constraints
 

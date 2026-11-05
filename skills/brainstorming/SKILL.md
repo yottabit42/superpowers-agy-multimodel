@@ -99,12 +99,12 @@ remove. Keep the spike in chat.
 5. **Implement** — proceed with the normal development workflow (TDD applies); no plan document
 
 **Architectural:**
-1. **Explore project context** — use `list_dir` and `grep_search` to check files, docs, recent commits. For large codebases, dispatch a `TypeName: "research"` subagent to explore in parallel while you ask questions.
+1. **Explore project context** — use `list_dir` and `grep_search` to check files, docs, recent commits. For large codebases, dispatch sharded `research` subagents on **`flash`** (`Model: "flash"` on `TypeName: "research"`, or `TypeName: "research-flash"` when `Model` is absent; max 10 files / 150 KB per shard) in parallel, or dispatch `1x architect` on **`inherit`** (`TypeName: "architect"`, `[ROLE: architect]`) when cross-package boundaries and blast radius are unclear.
 2. **Assess visual needs** — note whether upcoming questions have visual aspects. If so, use `generate_image` for mockups and diagrams as you go. No consent needed — this is a native tool, not a browser session.
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
+6. **Write design doc (`codesigner` → `designdoc-drafter`)** — under `profile=quota`, dispatch `1x codesigner` on **`inherit`** (`TypeName: "codesigner"`, `[ROLE: codesigner]`) to audit the agreed design against live repository symbols and write `<repo-root>/.superpowers/designs/<slug>-handoff.md` (with `.superpowers/.gitignore` set to `*`), then dispatch `1x designdoc-drafter` on **`flash`** (`Model: "flash"` on `TypeName: "designdoc-drafter"`, or `TypeName: "designdoc-drafter-flash"` when `Model` is absent) to draft `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
 7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
 8. **User reviews written spec** — ask user to review the spec file before proceeding
 9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
@@ -212,9 +212,10 @@ is the whole process.
 
 ## After the Design (architectural path)
 
-**Documentation:**
+**Documentation (`codesigner` → `designdoc-drafter` pipeline):**
 
-- Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
+- Dispatch `1x codesigner` on **`inherit`** (`TypeName: "codesigner"`, `Workspace: "inherit"`, `[ROLE: codesigner]`) to verify every proposed file path, symbol, and interface against the live codebase (`<= 10` files / `<= 150 KB` per turn) and write the structured design handoff to `<repo-root>/.superpowers/designs/<slug>-handoff.md` (ensuring `<repo-root>/.superpowers/.gitignore` contains `*`).
+- Next, dispatch `1x designdoc-drafter` on **`flash`** (`Model: "flash"` on `TypeName: "designdoc-drafter"`, or `TypeName: "designdoc-drafter-flash"` when `Model` is absent, `Workspace: "inherit"`, `[ROLE: designdoc-drafter]`) to transform `.superpowers/designs/<slug>-handoff.md` into the validated design (spec) at `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
