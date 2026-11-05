@@ -109,20 +109,17 @@ Then open the ledger:
 - If `progress.md` exists in this plan's directory, read it — tasks it marks complete are DONE; resume at the first task not marked complete.
 - If it does not exist, create it now with its header line: `# SDD ledger — plan: <plan file path>`.
 
-The four roles ship as bundled agents — `implementer`, `spec-reviewer`,
-`code-reviewer`, `re-reviewer` (defined in the plugin's `agents/`
-directory). No registration step: dispatch them by TypeName. If a dispatch
-fails with an unknown TypeName, the plugin's agents are not being
-discovered — verify the plugin installation before working around it.
+The five execution and verification roles ship as bundled agents — `implementer`, `spec-reviewer`, `code-reviewer`, `re-reviewer`, and `verifier` (plus hidden IDE flash variants `implementer-flash`, `spec-reviewer-flash`, `code-reviewer-flash`, `re-reviewer-flash`, and `verifier-flash` in the plugin's `agents/` directory). No registration step: dispatch them by `TypeName`. If `invoke_subagent` fails with an unknown `TypeName`, follow `references/fallback-adapter.md` (Phase 1 `define_subagent` → Phase 2 `TypeName: "self"` leaf override → Phase 3 inline leaf execution).
 
-**Workspace isolation per role:**
+**Workspace isolation and model tier per role (`quota` vs `same` profile):**
 
-| Role | Workspace Mode | Why |
-|------|---------------|-----|
-| Implementer | `Workspace: "branch"` | Needs isolated write access |
-| Spec reviewer | `Workspace: "inherit"` | Read-only — only inspects code |
-| Code reviewer | `Workspace: "inherit"` | Read-only — only inspects code |
-| Re-reviewer | `Workspace: "inherit"` | Read-only — verifies the fix diff |
+| Role | Primary `TypeName` | IDE Flash Variant (`Model` absent) | `quota` Tier | `same` Tier | Workspace Mode | Why |
+|------|--------------------|------------------------------------|-------------|------------|---------------|-----|
+| Implementer | `implementer` | `implementer-flash` | Rounds 1–3: `flash` · `BLOCKED` / Rounds 4–5: `inherit` | `inherit` | `Workspace: "branch"` | Needs isolated write access |
+| Spec reviewer | `spec-reviewer` | `spec-reviewer-flash` | `flash` | `inherit` | `Workspace: "inherit"` | Read-only — inspects task code vs spec |
+| Code reviewer | `code-reviewer` | `code-reviewer-flash` | Task & Tier 3 secondary: `flash` · Tier 3 lead & final branch: `inherit` | `inherit` | `Workspace: "inherit"` | Read-only — inspects code quality |
+| Re-reviewer | `re-reviewer` | `re-reviewer-flash` | `flash` | `inherit` | `Workspace: "inherit"` | Read-only — verifies the fix diff |
+| Verifier | `verifier` | `verifier-flash` | `flash` | `inherit` | `Workspace: "inherit"` | Read-only — runs full test suite & git hygiene check before branch completion |
 
 Read the plan once, extract all tasks with full text and context, and
 create a `task.md` artifact tracking each task's status. If the plan names
@@ -156,36 +153,53 @@ implementation.
 
 ## Model Selection
 
-Model tiers are set in each agent file's frontmatter (`model: flash|pro|inherit`). The four bundled roles live in the plugin's `agents/` directory and all ship `model: inherit` — the session's model governs. To differentiate tiers, add a workspace-scoped variant at `.agents/agents/<name>.md` first — this is the primary escalation path — or edit the plugin's bundled agent files directly; editing plugin (or global) agent files may require the user's Agent Non-Workspace File Access setting to be enabled. Neither `define_subagent` nor `invoke_subagent` takes a model argument.
+All bundled primary agent files (`agents/<role>.md`) omit `model:` from YAML frontmatter (`MODEL_TIER_UNSPECIFIED`) so Antigravity honors request-time tier routing, while hidden `agents/<role>-flash.md` variants set `model: flash` and `hidden: true` for IDE builds that omit `Model` from `invoke_subagent`. Never pass `"pro"` to `Model` and never edit agent frontmatter to a higher fixed tier — your human partner's selected session model (`inherit`) is the reasoning ceiling, and `max_concurrent_inherit: 2` caps concurrent `inherit` subagents at 2.
 
-Use the least powerful tier that can handle each role to conserve cost and increase speed.
-
-**Mechanical implementation tasks** (isolated functions, clear specs, 1-2 files): use a flash-tier agent type. Most implementation tasks are mechanical when the plan is well-specified.
-
-**Integration and judgment tasks** (multi-file coordination, pattern matching, debugging): use a standard model.
-
-**Architecture, design, and review tasks**: use a pro-tier agent type.
-
-**Task complexity signals:**
-- Touches 1-2 files with a complete spec → flash-tier agent type
-- Touches multiple files with integration concerns → standard model
-- Requires design judgment or broad codebase understanding → pro-tier agent type
+Apply the **Hybrid Model-Resolution Rule** from `skills/using-superpowers/SKILL.md`:
+1. **Determine target tier (`"flash"` or `"inherit"`):**
+   - Under `profile=same`, use `"inherit"` for every role.
+   - Under `profile=quota` (default), route per-task `implementer` (Rounds 1–3), `spec-reviewer`, Tier 2 `code-reviewer`, Tier 3 secondary `code-reviewer`, `re-reviewer`, and `verifier` to **`"flash"`**. Route Tier 3 lead `code-reviewer`, final whole-branch `code-reviewer`, and escalated `implementer` (`BLOCKED` or Fix Rounds 4–5) to **`"inherit"`**.
+2. **Dispatch via `invoke_subagent` (matching the active session's flat `{TypeName, Role, Prompt, Model?, Workspace?}` or `Subagents: [{...}]` schema):**
+   - **When `Model` is declared on `invoke_subagent`:** Dispatch primary `TypeName: "<role>"` with `Model: "flash"` or `Model: "inherit"`.
+   - **When `Model` is absent from `invoke_subagent`:** For `"flash"`, dispatch `TypeName: "<role>-flash"` (`implementer-flash`, `spec-reviewer-flash`, `code-reviewer-flash`, `re-reviewer-flash`, `verifier-flash`). For `"inherit"`, dispatch primary `TypeName: "<role>"`.
 
 ## The Task Loop
+
+**Hermetic `[ROLE: <role>]` Handoff Envelope.** Begin every subagent `Prompt` with:
+```markdown
+[ROLE: <role>]
+<SUBAGENT-STOP>
+GOAL: <one-sentence task objective>
+TASK: <full task text, commit range, or findings list — never make the subagent read the plan file>
+SCOPE: <exact file paths owned or inspected>
+CONTEXT: <Global Constraints from spec/plan, interface contracts, relevant ledger rulings>
+CONSTRAINTS: Workspace=<branch|inherit>; leaf worker only (never invoke subagents); read <= 10 files / <= 150 KB per turn
+VERIFICATION: <exact test/lint commands or read-only review rules>
+SKILLS: <optional leaf SKILL.md paths such as test-driven-development>
+```
 
 **Batch small same-shape work.** When the plan lists several tasks that are
 each a small, independent edit of the same kind — the same one-line fix,
 constant change, or field addition repeated across files — do not dispatch
 one subagent per task. Compose ONE dispatch brief listing every file and
-its change, send the whole batch to a single subagent, and review its diff
+its change (up to 3 small tasks or 8 files per batch), send the whole batch to a single subagent, and review its diff
 as one unit. Reserve one-dispatch-per-task for work that needs its own
 judgment, its own tests, or its own review surface.
 
 For each task, in plan order:
 
-1. Fill `implementer-prompt.md`'s dynamic template with the task's full text and scene-setting context, then dispatch: `invoke_subagent(Subagents: [{TypeName: "implementer", Role: "Implement Task <N>", Prompt: <filled template>, Workspace: "branch"}])`.
+1. Fill `implementer-prompt.md`'s dynamic template inside the `[ROLE: implementer]` envelope with the task's full text and scene-setting context, then dispatch `implementer` on **`flash`** (`Model: "flash"` on `TypeName: "implementer"` when `Model` is declared, or `TypeName: "implementer-flash"` when `Model` is absent) with `Workspace: "branch"`.
 2. **Record the implementer's conversation ID and its task branch name from the dispatch result** — the fix loop and the ledger's commit range depend on both.
-3. When the implementer reports DONE, run the two review stages in order: `spec-reviewer` first, then `code-reviewer` (dispatch templates in Prompt Templates below). Findings from either stage enter The Fix Loop.
+3. When the implementer reports DONE, run the two review stages in order: `spec-reviewer` on **`flash`** (`spec-reviewer-flash` when `Model` is absent) first, then `code-reviewer` on **`flash`** for Tier 2 plans (or parallel dual-tier review in **Tier 3 Best-of-N Mode** below). Findings from either stage enter The Fix Loop.
+
+### Tier 3 Best-of-N Mode
+
+When the plan header declares `**Tier:** Tier 3 Architectural` (or Route 5 applies):
+1. Run `spec-reviewer` on **`flash`** first and clear any spec findings.
+2. For the code-quality stage, dispatch **parallel `2x code-reviewer`** (`Workspace: "inherit"`):
+   - **Lead Reviewer (`inherit` — `TypeName: "code-reviewer"`, `Model: "inherit"`):** Focuses on architecture, cross-module contracts, blast-radius invariants, and plan alignment.
+   - **Secondary Reviewer (`flash` — `Model: "flash"` or `TypeName: "code-reviewer-flash"`):** Focuses on security, error handling, edge cases, and test adequacy.
+3. Deduplicate overlapping findings from both reviewers, rank `Critical → Important → Minor`, and feed the merged list into The Fix Loop.
 
 **Never:**
 - Dispatch multiple implementation subagents in parallel (conflicts)
@@ -204,7 +218,7 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 **BLOCKED:** The implementer cannot complete the task. Assess the blocker:
 1. If it's a context problem, resume or re-dispatch with more context
-2. If the task requires more reasoning, raise the agent's tier — add a workspace-scoped variant at `.agents/agents/<name>.md` first, or edit the bundled agent's frontmatter to `model: pro` (may require Agent Non-Workspace File Access) — and re-dispatch
+2. If the task requires more reasoning and the blocked implementer ran on `flash`, terminate it via `manage_subagents(Action: "kill", ConversationIds: ["<id>"])` and automatically escalate by dispatching a fresh `implementer` on **`inherit`** (`TypeName: "implementer"`, `Model: "inherit"`, `Workspace: "branch"`, instructing it to `git checkout <task-branch>` if partial commits exist) — never manually edit `.agents/agents/<name>.md` or set a higher fixed tier
 3. If the task is too large, break it into smaller pieces
 4. If the plan itself is wrong, rule on the correction, ledger it, and re-dispatch with the ruling carried in the dispatch
 
@@ -263,19 +277,18 @@ re-review until it does. Record Minor findings in the ledger as you go
 (`Task N: minor (deferred): <one-liner>`) and point the final whole-branch
 review at that list — a roll-up nobody reads is a silent discard.
 
-**Every round ends with a scoped re-review.** Dispatch the `re-reviewer`
-(see `re-review-prompt.md`) with the findings and the fix range. It
+**Every round ends with a scoped re-review.** Dispatch the `re-reviewer` on **`flash`** (`Model: "flash"` or `TypeName: "re-reviewer-flash"`; see `re-review-prompt.md`) with the findings and the fix range. It
 verdicts each finding ADDRESSED or NOT ADDRESSED and checks only the fix
 diff for new breakage — it cannot wander into a fresh full review.
 Out-of-scope observations go to the ledger, never back into the loop.
 
-**Rounds 4–5 — fresh implementer, takeover framing.** If three resumed
-rounds haven't converged, the original implementer's approach may be the
-problem. Kill it (`manage_subagents`), dispatch a fresh `implementer`
-whose Prompt carries: the task text, the prior implementer's last report,
+**Rounds 4–5 — fresh `inherit` implementer, takeover framing.** If three resumed `flash`
+rounds haven't converged, the original implementer's approach or reasoning tier may be the
+problem. Kill the `flash` implementer (`manage_subagents(Action: "kill", ConversationIds: ["<id>"])`), and automatically escalate by dispatching a fresh `implementer` on **`inherit`** (`TypeName: "implementer"`, `Model: "inherit"`, `Workspace: "branch"`)
+whose Prompt carries: the `[ROLE: implementer]` envelope, the task text, the prior implementer's last report,
 and the open findings. Its first action is `git checkout <task-branch>` in
 its workspace so it continues the task's commits rather than starting
-over.
+over. If Round 4 still leaves open findings, resume that `inherit` implementer via `send_message` for Round 5.
 
 **Round counting is shared per task, across both stages.** Append
 `Task <N>: fix round <R>/5 (<stage>: <one-line summary>)` to the ledger
@@ -406,18 +419,18 @@ only in todos.
 - `git clean -fdx` will destroy the ledger (it's git-ignored scratch); if
   that happens, recover from `git log`.
 
-## Final Review
+## Final Review & Non-Author Verification Gate
 
-After all tasks are complete, dispatch a final code-reviewer subagent for
+After all tasks are complete, dispatch a final `code-reviewer` subagent on **`inherit`** (`TypeName: "code-reviewer"`, `Model: "inherit"`, `Workspace: "inherit"`) for
 the entire implementation — the one whole-branch review that per-task
 reviews don't cover.
 
 - If the final whole-branch review returns findings, dispatch ONE fix
-  subagent with the complete findings list — not one fixer per finding.
+  subagent (`implementer`) with the complete findings list — not one fixer per finding.
   Record its task branch name from the dispatch result: the fix subagent
   commits to its own branch, not to yours, so the fix range lives there.
 - Then run exactly one scoped re-review of the fix wave: dispatch the
-  `re-reviewer` (see `re-review-prompt.md`) with the findings and the fix
+  `re-reviewer` on **`flash`** (`Model: "flash"` or `re-reviewer-flash`, see `re-review-prompt.md`) with the findings and the fix
   range — the head the final review saw as the fix base, the fix branch's
   head as the head. The fix wave's commits, nothing earlier.
   Adjudicate any residual findings as in the task loop's breaker: park with
@@ -425,6 +438,7 @@ reviews don't cover.
   Only the four classes above stop you here. There is no second fix wave —
   residual load-bearing findings surface to your human partner when
   **superpowers:finishing-a-development-branch** presents the options.
+- **Non-Author Verification Gate (`verifier` on `flash`):** `implementer` may never declare the overall plan verified. Once the final whole-branch review is clean (or adjudicated), dispatch `verifier` on **`flash`** (`Model: "flash"` on `TypeName: "verifier"`, or `TypeName: "verifier-flash"` when `Model` is absent, `Workspace: "inherit"`) with `[ROLE: verifier]` to run the full affected project test suite and check `git status --porcelain` empirically before proceeding to `## Finish`.
 
 ## Finish
 

@@ -55,6 +55,8 @@ PLAN_PATH="docs/superpowers/plans/implementation-plan.md"
 cat > "$PLAN_PATH" <<'EOF'
 # Test Implementation Plan
 
+**Tier:** Tier 2 Coupled
+
 This is a minimal plan to test the subagent-driven-development workflow on Antigravity.
 
 ## Task 1: Create Hello Function
@@ -195,6 +197,24 @@ else
         echo "  [FAIL] No subagent dispatch evidence found"
         FAILED=$((FAILED + 1))
     fi
+fi
+
+# Test 1b: Flash routing & Verifier gate in output or transcript
+TRANSCRIPT="${TRANSCRIPT:-$(find_transcript 60 "$TEST_PROJECT" 2>/dev/null || true)}"
+if grep -qiE 'implementer-flash|"Model"[[:space:]]*:[[:space:]]*"flash"|Model:[[:space:]]*"flash"' "$OUTPUT_FILE" ${TRANSCRIPT:+"$TRANSCRIPT"} 2>/dev/null; then
+    echo "  [PASS] Flash-tier implementer dispatch evidence found"
+    PASSED=$((PASSED + 1))
+else
+    echo "  [FAIL] No flash-tier implementer dispatch evidence found"
+    FAILED=$((FAILED + 1))
+fi
+
+if grep -qiE 'verifier-flash|verifier' "$OUTPUT_FILE" ${TRANSCRIPT:+"$TRANSCRIPT"} 2>/dev/null; then
+    echo "  [PASS] Verifier gate dispatch evidence found"
+    PASSED=$((PASSED + 1))
+else
+    echo "  [FAIL] No verifier gate dispatch evidence found"
+    FAILED=$((FAILED + 1))
 fi
 echo ""
 
