@@ -45,12 +45,14 @@
 
 | Tool | Arguments |
 |---|---|
-| `invoke_subagent` | `Subagents` — **an ARRAY** of specs `{Prompt, Role, TypeName, Workspace?}` |
-| `define_subagent` | `name`, `description`, `system_prompt`, `enable_mcp_tools`?, `enable_write_tools`?, `enable_subagent_tools`? |
+| `invoke_subagent` | **Flat shape (current Cortex/CLI):** `{TypeName, Role, Prompt, Model?, Workspace?}` (`Model` enum: `inherit`\|`flash_lite`\|`flash`\|`pro`). **Array shape (older IDE/docs):** `Subagents` — array of `{Prompt, Role, TypeName, Model?, Workspace?}`. Match the session's active tool declaration. |
+| `define_subagent` | **PascalCase shape (current Cortex/CLI):** `{Name, Description, SystemPrompt, EnableMCPTools?, EnableWriteTools?, EnableSubagentTools?}`. **Snake_case shape (older IDE/docs):** `{name, description, system_prompt, enable_mcp_tools?, enable_write_tools?, enable_subagent_tools?}`. Match the session's active tool declaration. |
 | `send_message` | `Recipient`, `Message` |
 | `manage_subagents` | `Action` (`'list'`\|`'kill'`\|`'kill_all'`), `ConversationIds`? |
 
-**Traps:** a single dispatch is still `Subagents: [{...}]` with one element — there is no bare named-parameter form. `define_subagent` has **no** `model`, `tools`, or `Workspace` argument: workspace is chosen per invocation; model tier is set only in custom-agent `.md` frontmatter.
+**Traps & CLI vs. IDE `Model` Parameter Split:**
+- **Call shape:** Match the session's active tool schema (`{TypeName, Role, Prompt, Model?, Workspace?}` flat parameters vs. `Subagents: [{...}]` array, and PascalCase `EnableWriteTools` vs. snake_case `enable_write_tools` on `define_subagent`).
+- **CLI vs. IDE `Model` parameter:** Antigravity CLI sets `always_inherit_model: false` and exposes `Model` (`inherit`\|`flash_lite`\|`flash`\|`pro`) on `invoke_subagent`. IDE builds with `always_inherit_model: true` omit `Model` from `invoke_subagent` and require `model: flash` frontmatter variants (`<role>-flash`). `define_subagent` has **no** `model`, `tools`, or `Workspace` argument.
 
 ### Interaction and media
 
@@ -82,7 +84,9 @@ Discovery locations:
 | Global | `~/.gemini/config/agents/<name>.md` (or `.../agents/<name>/agent.md`) |
 | Plugin | `plugins/<plugin_name>/agents/` — CLI-documented; IDE discovery unverified |
 
-Frontmatter properties: `name` (required), `description` (required — used by the planner for delegation), `tools` (string[] — **exact names; a misspelled tool name may hang the subagent**), `mainAgent` (default true), `subagent` (default true), `model` (`inherit`\|`flash`\|`pro`), `commandExecutionPolicy` (`off`\|`auto`\|`eager`\|`sandbox`), `mcpServers`, `skills`/`plugins`. The Markdown body after the frontmatter is the system prompt.
+Frontmatter properties: `name` (required), `description` (required — used by the planner for delegation), `tools` (string[] — **exact names; a misspelled tool name may hang the subagent**), `mainAgent` (default true), `subagent` (default true), `hidden` (boolean — when `hidden: true`, hides internal `-flash` mirror files from the `<subagents>` UI/prompt catalog while keeping them addressable via `invoke_subagent(TypeName: "<role>-flash")`), `model` (`inherit`\|`flash`\|`pro`), `commandExecutionPolicy` (`off`\|`auto`\|`eager`\|`sandbox`), `mcpServers`, `skills`/`plugins`. The Markdown body after the frontmatter is the system prompt.
+
+**Frontmatter `model:` Precedence (`MODEL_TIER_UNSPECIFIED` vs `MODEL_TIER_INHERIT`):** Setting `model: inherit` in `.md` frontmatter assigns `MODEL_TIER_INHERIT` and overrides caller-supplied `invoke_subagent(Model: "flash")`. Omitting `model:` leaves the agent at `MODEL_TIER_UNSPECIFIED`, which honors the caller's `Model` argument (`"flash"` or `"inherit"`) and defaults to `"inherit"` when `Model` is omitted. Primary bundled subagents therefore omit `model:`, while hidden `*-flash.md` variants set `model: flash` and `hidden: true` for IDE builds where `always_inherit_model: true` omits `Model`.
 
 ## Agent settings
 
