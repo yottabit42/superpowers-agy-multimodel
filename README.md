@@ -232,7 +232,7 @@ git pull
 
 Once installed, the methodology loads itself — no per-session setup:
 
-- **Automatic (default).** The plugin's context file loads the `using-superpowers` bootstrap into every session, and the bundled rule (`rules/using-superpowers.md`, with `trigger: always_on`) does the same through Antigravity's rule system — check the Rules panel once after installing and set it to **Always On** if it isn't already. By default, the Step-0 Adaptive Router runs with `mode=auto` and `profile=quota` (`max_concurrent_inherit=2`).
+- **Automatic (default).** The plugin's context file loads the `using-superpowers` bootstrap into every session, and the bundled rule (`rules/using-superpowers.md`, with `trigger: always_on`) does the same through Antigravity's rule system — check the Rules panel once after installing and set it to **Always On** if it isn't already. By default, the Step-0 Adaptive Router runs with `mode=auto` and `profile=quota` (`max_concurrent_inherit=8`).
 - **Runtime mode & profile switching.** Switch orchestration mode (`auto` | `solo` | `subagents`) or model profile (`quota` | `same`) anytime in chat:
   - `/start-superpowers [auto|solo|subagents] [quota|same]` — e.g., `/start-superpowers auto same` to run every subagent on your parent model, or `/start-superpowers subagents quota` for 100% delegated quota-saving routing.
   - `/start-superpowers-multimodel` — shorthand alias for `/start-superpowers subagents quota` (bypasses Route 1 Direct IC and delegates even surgical edits to `flash` `implementer`).

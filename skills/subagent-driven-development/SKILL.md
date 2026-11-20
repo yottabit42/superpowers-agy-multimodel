@@ -153,7 +153,7 @@ implementation.
 
 ## Model Selection
 
-All bundled primary agent files (`agents/<role>.md`) omit `model:` from YAML frontmatter (`MODEL_TIER_UNSPECIFIED`) so Antigravity honors request-time tier routing, while hidden `agents/<role>-flash.md` variants set `model: flash` and `hidden: true` for IDE builds that omit `Model` from `invoke_subagent`. Never pass `"pro"` to `Model` and never edit agent frontmatter to a higher fixed tier — your human partner's selected session model (`inherit`) is the reasoning ceiling, and `max_concurrent_inherit: 2` caps concurrent `inherit` subagents at 2.
+All bundled primary agent files (`agents/<role>.md`) omit `model:` from YAML frontmatter (`MODEL_TIER_UNSPECIFIED`) so Antigravity honors request-time tier routing, while hidden `agents/<role>-flash.md` variants set `model: flash` and `hidden: true` for IDE builds that omit `Model` from `invoke_subagent`. Never pass `"pro"` to `Model` and never edit agent frontmatter to a higher fixed tier — your human partner's selected session model (`inherit`) is the reasoning ceiling, and `max_concurrent_inherit: 8` caps concurrent `inherit` subagents at 8.
 
 Apply the **Hybrid Model-Resolution Rule** from `skills/using-superpowers/SKILL.md`:
 1. **Determine target tier (`"flash"` or `"inherit"`):**

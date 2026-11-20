@@ -54,7 +54,7 @@ On the first response to a new engineering task, classify the route (first match
 1. Session command: `/start-superpowers [auto|solo|subagents] [quota|same]` or `/start-superpowers-multimodel` (`mode=subagents`, `profile=quota`).
 2. Workspace config: `<repo-root>/.superpowers/config.json`.
 3. Global config: `~/.gemini/superpowers_config.json`.
-4. Built-in defaults: `default_mode: "auto"`, `default_profile: "quota"`, `max_concurrent_inherit: 2`, `role_models` overrides.
+4. Built-in defaults: `default_mode: "auto"`, `default_profile: "quota"`, `max_concurrent_inherit: 8`, `role_models` overrides.
 
 **Canonical Role Routing Matrix:**
 
@@ -77,7 +77,7 @@ On the first response to a new engineering task, classify the route (first match
 1. **Inspect `invoke_subagent` schema:**
    - **If `Model` is declared on `invoke_subagent`:** Dispatch primary `TypeName: "<role>"` with `Model: "flash"` or `Model: "inherit"`. Match the active `invoke_subagent` parameter shape (flat `{TypeName, Role, Prompt, Model, Workspace}` or `Subagents: [{...}]` array).
    - **If `Model` is absent from `invoke_subagent`:** For `inherit`, dispatch primary `TypeName: "<role>"` (omitted `model:` defaults to `inherit`). For `flash`, dispatch `TypeName: "<role>-flash"` (or `research-flash` for `research`), whose frontmatter forces `model: flash`.
-2. **Quota Guardrails:** Never pass `"pro"` to `Model`. Cap concurrent `inherit` subagents at `max_concurrent_inherit: 2` (batch into waves of at most 2). On `429 RESOURCE_EXHAUSTED` or capacity timeout on an `inherit` subagent, record `Ruling: <role> downgraded inherit → flash due to 429/capacity — <risk>` in the ledger (or chat) and retry immediately on `flash`.
+2. **Quota Guardrails:** Never pass `"pro"` to `Model`. Cap concurrent `inherit` subagents at `max_concurrent_inherit: 8` (batch into waves of at most 8). On `429 RESOURCE_EXHAUSTED` or capacity timeout on an `inherit` subagent, record `Ruling: <role> downgraded inherit → flash due to 429/capacity — <risk>` in the ledger (or chat) and retry immediately on `flash`.
 3. **Hermetic `[ROLE: <role>]` Handoff Envelope:** Begin every specialist subagent prompt with `[ROLE: <role-name>]` + `<SUBAGENT-STOP>` followed by `GOAL`, `TASK`, `SCOPE`, `CONTEXT`, `CONSTRAINTS`, `VERIFICATION`, and optional leaf `SKILLS`.
 4. **Missing-Subagent Fallback:** If `invoke_subagent` fails with `"subagent not found or not allowed"`, follow `references/fallback-adapter.md` (Phase 1 `define_subagent` → Phase 2 `TypeName: "self"` leaf override → Phase 3 inline leaf execution).
 

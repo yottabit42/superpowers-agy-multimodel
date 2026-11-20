@@ -65,7 +65,7 @@ Each agent gets:
 
 ### 3. Dispatch in Parallel (Flash Shards under `profile=quota`)
 
-Under `profile=quota`, route parallel execution/fix shards to **`implementer` on `flash`** (`TypeName: "implementer"` with `Model: "flash"` when `Model` is declared on `invoke_subagent`, or `TypeName: "implementer-flash"` when `Model` is absent) instead of `self` so parallel shards do not multiply frontier reasoning quota. Route read-only investigation shards to **`research` on `flash`** (`Model: "flash"` or `TypeName: "research-flash"`). Wrap each specialist prompt in the `[ROLE: <role>]` + `<SUBAGENT-STOP>` handoff envelope. If any shard must be escalated to `inherit`, enforce `max_concurrent_inherit: 2` (batch `inherit` shards into waves of at most 2).
+Under `profile=quota`, route parallel execution/fix shards to **`implementer` on `flash`** (`TypeName: "implementer"` with `Model: "flash"` when `Model` is declared on `invoke_subagent`, or `TypeName: "implementer-flash"` when `Model` is absent) instead of `self` so parallel shards do not multiply frontier reasoning quota. Route read-only investigation shards to **`research` on `flash`** (`Model: "flash"` or `TypeName: "research-flash"`). Wrap each specialist prompt in the `[ROLE: <role>]` + `<SUBAGENT-STOP>` handoff envelope. If any shard must be escalated to `inherit`, enforce `max_concurrent_inherit: 8` (batch `inherit` shards into waves of at most 8).
 
 ```
 invoke_subagent(Subagents: [
