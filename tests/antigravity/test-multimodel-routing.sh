@@ -112,7 +112,7 @@ run_rules() {
   echo "=== Gate: Bootstrap Router, Synced Rule & Slash Skills ==="
   local us="$REPO_ROOT/skills/using-superpowers/SKILL.md"
   local ur="$REPO_ROOT/rules/using-superpowers.md"
-  for tok in "Route 0" "Route 7" "default_profile" "quota" "same" "max_concurrent_inherit" "[ROLE:" "<SUBAGENT-STOP>" "fallback-adapter.md" "/teamwork-preview" "/browser"; do
+  for tok in "Route 0" "Route 7" "default_profile" "quota" "same" "max_concurrent_inherit" "[ROLE:" "<SUBAGENT-STOP>" "fallback-adapter.md" "/swarm" "/teamwork-preview" "/browser"; do
     grep -Fq "$tok" "$us" && pass "using-superpowers contains $tok" || fail "using-superpowers missing $tok"
   done
   if grep -Fq -- "-->" "$us"; then

@@ -32,7 +32,7 @@ When multiple skills apply, process skills come first — they set the approach,
 
 ## Step-0 Adaptive Router & Host Yield
 
-**Host Yield:** If the prompt or system context invokes `/teamwork-preview` (`<TEAMWORK>`) or `/browser` (`<SUBAGENT>`), yield to that built-in host. Apply Superpowers TDD, debugging, and verification skills as leaf discipline without running a competing Step-0 router or wrapping built-in host dispatches in `[ROLE:]` envelopes.
+**Host Yield:** If the prompt or system context invokes `/swarm`, `/teamwork-preview` (`<TEAMWORK>`), or `/browser` (`<SUBAGENT>`), yield to that built-in host (including inside swarm workers). Apply Superpowers TDD, debugging, and verification skills as leaf discipline without running a competing Step-0 router or wrapping built-in host dispatches in `[ROLE:]` envelopes.
 
 On the first response to a new engineering task, classify the route (first match wins) and announce one line:
 `Route: <N> (<mode>) — <reason> [Profile: <quota|same>]`
